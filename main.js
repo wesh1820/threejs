@@ -1,3 +1,4 @@
+// Imports en basis setup
 import '/style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -5,118 +6,85 @@ import * as dat from 'dat.gui';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animate);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// dat gui voor de zon en klok
+// GUI controls voor zon en tijd
 const gui = new dat.GUI();
-const clockControl = {
-    hour: 12, // Default tijd is 12 uur (middag)
-};
+const clockControl = { hour: 12 };
 
-// Zon
+// Zonlicht
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
 scene.add(sunLight);
 
-// Zon als object
+// Zon object
 const sunGeometry = new THREE.SphereGeometry(1, 32, 32);
 const sunMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
 const sun = new THREE.Mesh(sunGeometry, sunMaterial);
 scene.add(sun);
 
-// Zon in GUI
-const sunFolder = gui.addFolder('Zon');
+// GUI setup voor zon en tijd
+const sunFolder = gui.addFolder('Sun');
 sunFolder.add(sunLight.position, 'x', -10, 10);
-sunFolder.add(sunLight.position, 'y', -10, 30);  // Zonpositie aanpassen
+sunFolder.add(sunLight.position, 'y', -10, 30);
 sunFolder.add(sunLight.position, 'z', -10, 10);
 sunFolder.add(sunLight, 'intensity', 0, 1);
 
-// Klok GUI voor het instellen van het uur van de dag
-const timeFolder = gui.addFolder('Tijd');
-timeFolder.add(clockControl, 'hour', 0, 24, 1).name('Uur van de dag').onChange(updateSunPosition);
+const timeFolder = gui.addFolder('Time');
+timeFolder.add(clockControl, 'hour', 0, 24, 1).name('Hour').onChange(updateSunPosition);
 
-// Ambient light (blauwachtige lucht)
-const ambientLight = new THREE.AmbientLight(0x87ceeb, 0.5); // Lucht
+// Omgevingslicht
+const ambientLight = new THREE.AmbientLight(0x87ceeb, 0.5);
 scene.add(ambientLight);
 
-// Orbit controls voor de camera
+// Camera besturing
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+scene.background = new THREE.Color(0x87ceeb);
 
-// Blauwe lucht
-const skyColor = new THREE.Color(0x87ceeb); // Blauwe lucht
-scene.background = skyColor;
-
-// Wolken (beweging)
-const cloudTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/skybox/px.jpg'); // Wolktextuur
-const cloudMaterial = new THREE.MeshBasicMaterial({
-    map: cloudTexture,
-    transparent: true,
-    opacity: 0.8,
-});
-const cloudGeometry = new THREE.PlaneGeometry(30, 30);
-const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-cloud.position.set(0, 15, 0); // Wolken in de lucht
-cloud.rotation.x = Math.PI / 2;
-scene.add(cloud);
-
-// Beweeg de wolken
-let cloudSpeed = 0.02; // Snellere beweging
-function moveClouds() {
-    cloud.position.x += cloudSpeed;
-    if (cloud.position.x > 30) {
-        cloud.position.x = -30;
-    }
-}
-
-// Groene grond
-const groundGeometry = new THREE.PlaneGeometry(20, 20);
-const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22, side: THREE.DoubleSide }); // Groene kleur voor de grond
+// Grond
+const groundGeometry = new THREE.PlaneGeometry(400, 400);
+const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x226B22, side: THREE.DoubleSide });
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = Math.PI / 2;
-ground.position.y = -1; // Plattegrond op de grond
+ground.position.y = -1;
 scene.add(ground);
 
+// Villa basis
+const villaFloorGeometry = new THREE.BoxGeometry(8, 0.1, 8);
+const villaFloorMaterial = new THREE.MeshStandardMaterial({ color: 0xa0522d });
+const villaFloor = new THREE.Mesh(villaFloorGeometry, villaFloorMaterial);
+villaFloor.position.y = -1;
+villaFloor.receiveShadow = true;
+scene.add(villaFloor);
 
-// Huis met muren, dak en deur
-const brickTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/brick_diffuse.jpg'); // Baksteentextuur
+// Villa muren met baksteen textuur
+const brickTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/brick_diffuse.jpg');
+const brickMaterial = new THREE.MeshStandardMaterial({ map: brickTexture, roughness: 0.5, metalness: 0.1 });
 
-// Vloer van het huis
-const floorGeometry = new THREE.BoxGeometry(5, 0.1, 5);
-const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xa0522d });
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.position.y = -1;
-floor.receiveShadow = true;
-scene.add(floor);
+const villaWallGeometry = new THREE.BoxGeometry(8, 3, 0.1);
+const villaWall1 = new THREE.Mesh(villaWallGeometry, brickMaterial);
+villaWall1.position.set(0, 0.5, -3.9);
+scene.add(villaWall1);
 
-// Muren
-const brickMaterial = new THREE.MeshStandardMaterial({
-    map: brickTexture,
-    roughness: 0.5,
-    metalness: 0.1
-});
-const wall1 = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 0.1), brickMaterial);
-wall1.position.set(0, 0.5, -2.5);
-scene.add(wall1);
+const villaWall2 = new THREE.Mesh(villaWallGeometry, brickMaterial);
+villaWall2.position.set(0, 0.5, 3.9);
+scene.add(villaWall2);
 
-const wall2 = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 0.1), brickMaterial);
-wall2.position.set(0, 0.5, 2.5);
-scene.add(wall2);
+const villaWallSideGeometry = new THREE.BoxGeometry(0.1, 3, 8);
+const villaWall3 = new THREE.Mesh(villaWallSideGeometry, brickMaterial);
+villaWall3.position.set(-3.9, 0.5, 0);
+scene.add(villaWall3);
 
-const wall3 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 5), brickMaterial);
-wall3.position.set(-2.5, 0.5, 0);
-scene.add(wall3);
+const villaWall4 = new THREE.Mesh(villaWallSideGeometry, brickMaterial);
+villaWall4.position.set(3.9, 0.5, 0);
+scene.add(villaWall4);
 
-const wall4 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 5), brickMaterial);
-wall4.position.set(2.5, 0.5, 0);
-scene.add(wall4);
-
-// Dak van het huis
-const roofGeometry = new THREE.ConeGeometry(4, 2, 4);
+// Dak van de villa
+const roofGeometry = new THREE.ConeGeometry(6, 2, 4);
 const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xff6347 });
 const roof = new THREE.Mesh(roofGeometry, roofMaterial);
 roof.position.y = 3;
@@ -125,7 +93,7 @@ roof.castShadow = true;
 scene.add(roof);
 
 // Deur met textuur
-const doorTexture = new THREE.TextureLoader().load('/wood.jpg');
+const doorTexture = new THREE.TextureLoader().load('public/fit.jpg');
 const doorMaterialWithTexture = new THREE.MeshStandardMaterial({
     map: doorTexture,
     roughness: 0.8,
@@ -133,66 +101,101 @@ const doorMaterialWithTexture = new THREE.MeshStandardMaterial({
 });
 const doorGeometry = new THREE.BoxGeometry(0.8, 1.5, 0.05);
 const door = new THREE.Mesh(doorGeometry, doorMaterialWithTexture);
-door.position.set(0, -0.25, -2.5);
+door.position.set(0, -0.25, -3.9);
 door.castShadow = true;
 scene.add(door);
 
-// Schilderij in het huis
-const paintingTexture = new THREE.TextureLoader().load('/fit.jpg');
-const paintingGeometry = new THREE.PlaneGeometry(1, 1.5);
-const paintingMaterial = new THREE.MeshStandardMaterial({
-    map: paintingTexture,
-});
-const painting = new THREE.Mesh(paintingGeometry, paintingMaterial);
-painting.position.set(0, 0, 2.4);
-painting.rotation.y = Math.PI;
-scene.add(painting);
+// Zwembad
+const poolGeometry = new THREE.BoxGeometry(6, 0.5, 6);
+const poolMaterial = new THREE.MeshStandardMaterial({ color: 0x1e90ff, opacity: 0.8, transparent: true });
+const pool = new THREE.Mesh(poolGeometry, poolMaterial);
+pool.position.set(8, -1.20, 0);
+pool.receiveShadow = true;
+scene.add(pool);
 
-// Camera animatie
-camera.position.z = 10;
-const clock = new THREE.Clock();
-let animateCamera = true;
-function animate() {
-    if (animateCamera) {
-        camera.position.x += 0.05;
-        camera.position.z -= 0.05;
-        if (camera.position.z < 5) animateCamera = false;
+// Boom functie
+function createTree(x, z) {
+    const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2);
+    const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+
+    const foliageGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+    const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+    const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+
+    trunk.position.set(x, 0, z);
+    foliage.position.set(x, 1.2, z);
+
+    scene.add(trunk, foliage);
+}
+
+// Plaats bomen rondom villa
+for (let i = -15; i <= 15; i += 10) {
+    for (let j = -15; j <= 15; j += 10) {
+        if (Math.random() > 0.5) createTree(i, j);
     }
+}
 
-    moveClouds();  // Beweeg de wolken
-    updateSunPosition(clockControl.hour); // Pas zon positie aan
+// Huizen maken functie
+function createHouse(x, z) {
+    const houseBaseGeometry = new THREE.BoxGeometry(3, 2, 3);
+    const houseBaseMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const houseBase = new THREE.Mesh(houseBaseGeometry, houseBaseMaterial);
+    houseBase.position.set(x, 0, z);
+    houseBase.castShadow = true;
+
+    const houseRoofGeometry = new THREE.ConeGeometry(3, 1.5, 4);
+    const houseRoofMaterial = new THREE.MeshStandardMaterial({ color: 0xFF6347 });
+    const houseRoof = new THREE.Mesh(houseRoofGeometry, houseRoofMaterial);
+    houseRoof.position.set(x, 1.5, z);
+    houseRoof.rotation.y = Math.PI / 4;
+
+    scene.add(houseBase, houseRoof);
+}
+
+// Plaats huizen rondom de villa
+for (let i = -15; i <= 15; i += 30) {
+    for (let j = -15; j <= 15; j += 20) {
+        if (i !== 0 || j !== 0) createHouse(i, j);
+    }
+}
+
+// Wolken
+const cloudTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/cloud.png');
+cloudTexture.wrapS = cloudTexture.wrapT = THREE.RepeatWrapping;
+cloudTexture.repeat.set(5, 5);
+
+const cloudGeometry = new THREE.PlaneGeometry(50, 50);
+const cloudMaterial = new THREE.MeshStandardMaterial({
+    map: cloudTexture,
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8,
+    depthWrite: false
+});
+const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
+clouds.rotation.x = -Math.PI / 2;
+clouds.position.y = 15;
+scene.add(clouds);
+
+// Animatiefuncties en loop
+function animate() {
     controls.update();
     renderer.render(scene, camera);
 }
 
-// Zon positie en intensiteit aanpassen op basis van het uur van de dag
 function updateSunPosition(hour) {
-    let intensity = 0;
-    let yPos = 0;
-
-    // Zonintensiteit & positie aanpassen afhankelijk van het uur
-    if (hour >= 6 && hour <= 18) {
-        intensity = Math.min(1, (hour - 6) / 12); // Intensiteit stijgt van 6u tot 18u
-        yPos = Math.sin((hour - 6) / 12 * Math.PI); // Zon volgt de curve van de hemel
-    } else {
-        intensity = 0.1; // Zon in de nacht is heel zwak
-        yPos = Math.sin((hour - 6) / 12 * Math.PI); // Zon in de nacht, maar wel een negatieve hoogte
-    }
-
-    sunLight.intensity = intensity;
-    sun.position.y = 10 * yPos; // Zonhoogte
-    sun.position.x = 10 * Math.cos((hour / 24) * 2 * Math.PI); // Zon beweegt in een cirkel
-    sun.position.z = 10 * Math.sin((hour / 24) * 2 * Math.PI); // Zon beweegt in een cirkel
+    const angle = (hour / 24) * Math.PI * 2;
+    sun.position.set(15 * Math.cos(angle), 15 * Math.sin(angle), 5);
+    sunLight.position.copy(sun.position);
+    sunLight.intensity = Math.max(0.1, Math.sin(angle) * 0.5 + 0.5);
 }
 
-// Resizes the renderer and camera when the window size changes
+camera.position.set(0, 5, 20);
+updateSunPosition(clockControl.hour);
+
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
-// Begin animatie na 2 seconden
-setTimeout(() => {
-    animateCamera = true;
-}, 2000);
